@@ -52,6 +52,7 @@ struct BuildAndroid: ParsableCommand {
         let toApkFile = "\(apkCachePath)/app-\(mode.rawValue)-\(buildNumber).apk"
         try FileManager.default.copyItem(atPath: apkFile, toPath: toApkFile)
         context.currentdirectory = "\(pwd)/android"
+        print(context.currentdirectory)
         let firCommand = context.runAsyncAndPrint("fastlane", "firim", "file:\(toApkFile)")
         try firCommand.finish()
     }
