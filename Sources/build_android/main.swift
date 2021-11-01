@@ -20,14 +20,14 @@ struct BuildAndroid: ParsableCommand {
     mutating func run() throws {
         var context = CustomContext(SwiftShell.main)
         context.env["PATH"] = "/Users/king/flutter/bin:/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Library/Apple/usr/bin"
-        guard var pwd = ProcessInfo.processInfo.environment["PWD"] else {
+        guard let pwd = ProcessInfo.processInfo.environment["PWD"] else {
             throw "$PWD为空"
         }
         guard let home = ProcessInfo.processInfo.environment["HOME"] else {
             throw "$HOME为空"
         }
         
-        pwd = "/Users/king/Documents/flutter_win+"
+//        pwd = "/Users/king/Documents/flutter_win+"
 
         let buildNumber = "\(Int(Date().timeIntervalSince1970))"
         var buildParameters:[String] = [
@@ -70,4 +70,4 @@ struct BuildAndroid: ParsableCommand {
     }
 }
 
-BuildAndroid.main(["--profile"])
+BuildAndroid.main()
