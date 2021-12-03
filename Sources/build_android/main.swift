@@ -19,7 +19,9 @@ struct BuildAndroid: ParsableCommand {
     
     mutating func run() throws {
         var context = CustomContext(SwiftShell.main)
-        context.env["PATH"] = "/Users/king/flutter/bin:/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Library/Apple/usr/bin"
+        if let envPath = ProcessInfo.processInfo.environment["ENV_PATH"] {
+            context.env["PATH"] = envPath
+        }
         guard let pwd = ProcessInfo.processInfo.environment["PWD"] else {
             throw "$PWD为空"
         }
