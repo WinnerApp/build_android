@@ -56,7 +56,7 @@ struct BuildAndroid: ParsableCommand {
         context.currentdirectory = "\(pwd)/android"
         print(context.currentdirectory)
         let changelog:String = mode == .release ? "正式版本":"体验版本"
-        let firCommand = context.runAsyncAndPrint("fastlane", "firim", "file:\(toApkFile)", changelog)
+        let firCommand = context.runAsyncAndPrint("fastlane", "firim", "file:\(toApkFile)", "changelog:\(changelog)")
         try firCommand.finish()
     }
     
