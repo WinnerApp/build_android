@@ -55,7 +55,7 @@ struct BuildAndroid: ParsableCommand {
         try FileManager.default.copyItem(atPath: apkFile, toPath: toApkFile)
         context.currentdirectory = "\(pwd)/android"
         print(context.currentdirectory)
-        let changelog:String = mode == .release ? "正式版本":"体验版本"
+        let changelog = changelog()
         let firCommand = context.runAsyncAndPrint("fastlane", "firim", "file:\(toApkFile)", "changelog:\(changelog)")
         try firCommand.finish()
     }
@@ -72,6 +72,46 @@ struct BuildAndroid: ParsableCommand {
                                                 withIntermediateDirectories: true,
                                                 attributes: nil)
     }
+    
+    func changelog() -> String {
+        /// http://127.0.0.1:8080/job/win+_android/179/api/json?oauth_token=1191f0b1d3a092f71d96673689e32b0368&oauth_signature_method=HMAC-SHA1&oauth_timestamp=1644221464&oauth_nonce=W9KIzo&oauth_version=1.0&oauth_signature=AUAng0HUvSM5uLHk0l0QHf7fZCI%3D&pretty=true
+        var log = mode == .release ? "正式版本":"体验版本"
+        if let jobId = ProcessInfo.processInfo.environment["BUILD_ID"], let url = URL(string: "http://127.0.0.1:8080/job/win+_android/\(jobId)/api/json?oauth_token=1191f0b1d3a092f71d96673689e32b0368&oauth_signature_method=HMAC-SHA1&oauth_timestamp=1644221464&oauth_nonce=W9KIzo&oauth_version=1.0&oauth_signature=AUAng0HUvSM5uLHk0l0QHf7fZCI%3D&pretty=tru") {
+            let semaphore = DispatchSemaphore(value: 0)
+            var request = URLRequest(url: url)
+            request.setValue("Basic a2luZzoxOTkwODIz", forHTTPHeaderField: "authorization")
+            let task = URLSession.shared.dataTask(with: request) { data, response, error in
+                if let data = data, let jobInfo = try? JSONDecoder().decode(JobInfo.self, from: data) {
+                    jobInfo.changeSet?.items.forEach({ item in
+                        log += """
+                        
+                        - \(item.msg)
+                        """
+                    })
+                }
+                semaphore.signal()
+            }
+            task.resume()
+            semaphore.wait()
+        }
+        return log
+    }
 }
 
 BuildAndroid.main()
+
+struct JobInfo: Codable {
+    let changeSet:ChangeSet?
+}
+
+extension JobInfo {
+    struct ChangeSet: Codable {
+        let items:[Item]
+    }
+}
+
+extension JobInfo.ChangeSet {
+    struct Item: Codable {
+        let msg:String
+    }
+}
