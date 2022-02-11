@@ -56,8 +56,11 @@ struct BuildAndroid: ParsableCommand {
         context.currentdirectory = "\(pwd)/android"
         print(context.currentdirectory)
         let changelog = changelog()
-        let firCommand = context.runAsyncAndPrint("fastlane", "firim", "file:\(toApkFile)", "changelog:\(changelog)")
-        try firCommand.finish()
+//        let firCommand = context.runAsyncAndPrint("fastlane", "firim", "file:\(toApkFile)", "changelog:\(changelog)")
+//        try firCommand.finish()
+        print("正在将APK上传到Zealot服务")
+        uploadApkInZealot(apkFile: apkFile, changeLog: changelog)
+        print("上传APK完毕")
     }
     
     func createDirectoryIfNotExit(path:String) throws {
@@ -95,6 +98,66 @@ struct BuildAndroid: ParsableCommand {
             semaphore.wait()
         }
         return log
+    }
+    
+    func uploadApkInZealot(apkFile:String, changeLog:String) {
+        guard let zealotToken = ProcessInfo.processInfo.environment["ZEALOT_TOKEN"] else {
+            SwiftShell.exit(errormessage: "ZEALOT_TOKEN不存在")
+        }
+        guard let channelKey = ProcessInfo.processInfo.environment["ZRALOT_CHANNEL_KRY"] else {
+            SwiftShell.exit(errormessage: "ZRALOT_CHANNEL_KRY不存在")
+        }
+        let semaphore = DispatchSemaphore(value: 1)
+        let uploadUrl = "http://127.0.0.1/api/apps/upload?token=\(zealotToken)"
+        guard let url = URL(string: uploadUrl) else {return}
+        let headers = [
+          "content-type": "multipart/form-data;",
+        ]
+        let parameters = [
+          [
+            "name": "file",
+            "fileName": apkFile
+          ],
+          [
+            "name": "channel_key",
+            "value": channelKey
+          ],
+          [
+            "name": "release_type",
+            "value": mode != .release ? "adhoc" : "release"
+          ],
+          [
+            "name": "changelog",
+            "value": changeLog
+          ]
+        ]
+
+        var body = ""
+        for param in parameters {
+          let paramName = param["name"]!
+          body += "Content-Disposition:form-data; name=\"\(paramName)\""
+          if let filename = param["fileName"] {
+            let contentType = param["content-type"]!
+              guard let fileContent = try? String(contentsOfFile: filename, encoding: String.Encoding.utf8) else {continue}
+            body += "; filename=\"\(filename)\"\r\n"
+            body += "Content-Type: \(contentType)\r\n\r\n"
+            body += fileContent
+          } else if let paramValue = param["value"] {
+            body += "\r\n\r\n\(paramValue)"
+          }
+        }
+
+        let request = NSMutableURLRequest(url: url)
+        request.httpMethod = "POST"
+        request.allHTTPHeaderFields = headers
+        request.httpBody = body.data(using: .utf8)
+
+        let session = URLSession.shared
+        let dataTask = session.dataTask(with: request as URLRequest, completionHandler: { (data, response, error) -> Void in
+            semaphore.signal()
+        })
+        dataTask.resume()
+        semaphore.wait()
     }
 }
 
