@@ -87,6 +87,16 @@
             isEnabled = "YES">
          </EnvironmentVariable>
          <EnvironmentVariable
+            key = "ZEALOT_TOKEN"
+            value = "f9fefe56eca1a4f4c74f4a127a9062f9"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "ZEALOT_CHANNEL_KEY"
+            value = "f5396bfa1049a635a9a1b831b5e7112e"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+         <EnvironmentVariable
             key = "BUILD_ID"
             value = "179"
             isEnabled = "YES">

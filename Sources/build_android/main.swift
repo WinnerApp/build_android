@@ -1,6 +1,7 @@
 import ArgumentParser
 import SwiftShell
 import Foundation
+import Alamofire
 
 
 struct BuildAndroid: ParsableCommand {
@@ -28,9 +29,6 @@ struct BuildAndroid: ParsableCommand {
         guard let home = ProcessInfo.processInfo.environment["HOME"] else {
             throw "$HOME为空"
         }
-        
-//        pwd = "/Users/king/Documents/flutter_win+"
-
         let buildNumber = "\(Int(Date().timeIntervalSince1970))"
         var buildParameters:[String] = [
             "build",
@@ -104,59 +102,36 @@ struct BuildAndroid: ParsableCommand {
         guard let zealotToken = ProcessInfo.processInfo.environment["ZEALOT_TOKEN"] else {
             SwiftShell.exit(errormessage: "ZEALOT_TOKEN不存在")
         }
-        guard let channelKey = ProcessInfo.processInfo.environment["ZRALOT_CHANNEL_KEY"] else {
-            SwiftShell.exit(errormessage: "ZRALOT_CHANNEL_KEY不存在")
+        guard let channelKey = ProcessInfo.processInfo.environment["ZEALOT_CHANNEL_KEY"] else {
+            SwiftShell.exit(errormessage: "ZEALOT_CHANNEL_KEY不存在")
         }
-        let semaphore = DispatchSemaphore(value: 1)
-        let uploadUrl = "http://127.0.0.1/api/apps/upload?token=\(zealotToken)"
-        guard let url = URL(string: uploadUrl) else {return}
-        let headers = [
-          "content-type": "multipart/form-data;",
-        ]
-        let parameters = [
-          [
-            "name": "file",
-            "fileName": apkFile
-          ],
-          [
-            "name": "channel_key",
-            "value": channelKey
-          ],
-          [
-            "name": "release_type",
-            "value": mode != .release ? "adhoc" : "release"
-          ],
-          [
-            "name": "changelog",
-            "value": changeLog
-          ]
-        ]
-
-        var body = ""
-        for param in parameters {
-          let paramName = param["name"]!
-          body += "Content-Disposition:form-data; name=\"\(paramName)\""
-          if let filename = param["fileName"] {
-            let contentType = param["content-type"]!
-              guard let fileContent = try? String(contentsOfFile: filename, encoding: String.Encoding.utf8) else {continue}
-            body += "; filename=\"\(filename)\"\r\n"
-            body += "Content-Type: \(contentType)\r\n\r\n"
-            body += fileContent
-          } else if let paramValue = param["value"] {
-            body += "\r\n\r\n\(paramValue)"
-          }
-        }
-
-        let request = NSMutableURLRequest(url: url)
-        request.httpMethod = "POST"
-        request.allHTTPHeaderFields = headers
-        request.httpBody = body.data(using: .utf8)
-
-        let session = URLSession.shared
-        let dataTask = session.dataTask(with: request as URLRequest, completionHandler: { (data, response, error) -> Void in
+        let semaphore = DispatchSemaphore(value: 0)
+        let uploadUrl = "http://127.0.0.1:80/api/apps/upload?token=\(zealotToken)"
+        let mode = mode != .release ? "adhoc" : "release"
+        AF.upload(multipartFormData: { fromData in
+            if let data = channelKey.data(using: .utf8) {
+                fromData.append(data, withName: "channel_key")
+            }
+            if let data = mode.data(using: .utf8) {
+                fromData.append(data, withName: "release_type")
+            }
+            if let data = changeLog.data(using: .utf8) {
+                fromData.append(data, withName: "changelog")
+            }
+            if let data = try? Data(contentsOf: URL(fileURLWithPath: apkFile)) {
+                fromData.append(data, withName: "file", fileName: apkFile)
+            }
+        }, to: uploadUrl).uploadProgress(queue:DispatchQueue.global()) { progress in
+            print("已上传:\(progress.completedUnitCount) 总共大小:\(progress.totalUnitCount)")
+        }.response(queue: DispatchQueue.global()) { response in
+            if let error = response.error?.localizedDescription {
+                print(error)
+            }
+        
             semaphore.signal()
-        })
-        dataTask.resume()
+        }
+        
+
         semaphore.wait()
     }
 }
