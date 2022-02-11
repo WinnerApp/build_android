@@ -104,8 +104,8 @@ struct BuildAndroid: ParsableCommand {
         guard let zealotToken = ProcessInfo.processInfo.environment["ZEALOT_TOKEN"] else {
             SwiftShell.exit(errormessage: "ZEALOT_TOKEN不存在")
         }
-        guard let channelKey = ProcessInfo.processInfo.environment["ZRALOT_CHANNEL_KRY"] else {
-            SwiftShell.exit(errormessage: "ZRALOT_CHANNEL_KRY不存在")
+        guard let channelKey = ProcessInfo.processInfo.environment["ZRALOT_CHANNEL_KEY"] else {
+            SwiftShell.exit(errormessage: "ZRALOT_CHANNEL_KEY不存在")
         }
         let semaphore = DispatchSemaphore(value: 1)
         let uploadUrl = "http://127.0.0.1/api/apps/upload?token=\(zealotToken)"
