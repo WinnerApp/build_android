@@ -19,6 +19,8 @@ struct BuildAndroid: ParsableCommand {
     var buildName:String?
     
     mutating func run() throws {
+        uploadApkInZealot(apkFile: "/Users/king/Library/Caches/apk/app-profile-1644727552.apk", changeLog: "")
+        return
         var context = CustomContext(SwiftShell.main)
         if let envPath = ProcessInfo.processInfo.environment["ENV_PATH"] {
             context.env["PATH"] = envPath
@@ -105,8 +107,11 @@ struct BuildAndroid: ParsableCommand {
         guard let channelKey = ProcessInfo.processInfo.environment["ZEALOT_CHANNEL_KEY"] else {
             SwiftShell.exit(errormessage: "ZEALOT_CHANNEL_KEY不存在")
         }
+        guard let uploadHost = ProcessInfo.processInfo.environment["ZEALOT_HOST"] else {
+            SwiftShell.exit(errormessage: "ZEALOT_HOST 不存在")
+        }
         let semaphore = DispatchSemaphore(value: 0)
-        let uploadUrl = "http://127.0.0.1:80/api/apps/upload?token=\(zealotToken)"
+        let uploadUrl = "\(uploadHost)/api/apps/upload?token=\(zealotToken)"
         let mode = mode != .release ? "adhoc" : "release"
         AF.upload(multipartFormData: { fromData in
             if let data = channelKey.data(using: .utf8) {
@@ -126,8 +131,9 @@ struct BuildAndroid: ParsableCommand {
         }.response(queue: DispatchQueue.global()) { response in
             if let error = response.error?.localizedDescription {
                 print(error)
+            } else if let response = response.response {
+                print(response)
             }
-        
             semaphore.signal()
         }
         

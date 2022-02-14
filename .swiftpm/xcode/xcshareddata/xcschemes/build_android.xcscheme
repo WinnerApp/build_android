@@ -87,13 +87,18 @@
             isEnabled = "YES">
          </EnvironmentVariable>
          <EnvironmentVariable
+            key = "ZEALOT_HOST"
+            value = "https://127.0.0.1"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+         <EnvironmentVariable
             key = "ZEALOT_TOKEN"
             value = "f9fefe56eca1a4f4c74f4a127a9062f9"
             isEnabled = "YES">
          </EnvironmentVariable>
          <EnvironmentVariable
             key = "ZEALOT_CHANNEL_KEY"
-            value = "f5396bfa1049a635a9a1b831b5e7112e"
+            value = "f9a2cd8d790b511f5d1d03e8adb83be2"
             isEnabled = "YES">
          </EnvironmentVariable>
          <EnvironmentVariable
