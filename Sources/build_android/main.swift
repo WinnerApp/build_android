@@ -88,7 +88,7 @@ struct BuildAndroid: ParsableCommand {
                     jobInfo.changeSet?.items.forEach({ item in
                         log += """
                         
-                        - \(item.msg)
+                        - \(item.comment)
                         """
                     })
                 }
@@ -156,6 +156,6 @@ extension JobInfo {
 
 extension JobInfo.ChangeSet {
     struct Item: Codable {
-        let msg:String
+        let comment:String
     }
 }
