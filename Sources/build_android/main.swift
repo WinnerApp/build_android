@@ -19,8 +19,8 @@ struct BuildAndroid: ParsableCommand {
     var buildName:String?
     
     mutating func run() throws {
-        uploadApkInZealot(apkFile: "/Users/king/Library/Caches/apk/app-profile-1644727552.apk", changeLog: "")
-        return
+//        uploadApkInZealot(apkFile: "/Users/king/Library/Caches/apk/app-profile-1644727552.apk", changeLog: "")
+//        return
         var context = CustomContext(SwiftShell.main)
         if let envPath = ProcessInfo.processInfo.environment["ENV_PATH"] {
             context.env["PATH"] = envPath
