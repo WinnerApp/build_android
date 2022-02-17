@@ -59,7 +59,10 @@ struct BuildAndroid: ParsableCommand {
 //        let firCommand = context.runAsyncAndPrint("fastlane", "firim", "file:\(toApkFile)", "changelog:\(changelog)")
 //        try firCommand.finish()
         print("正在将APK上传到Zealot服务")
-        uploadApkInZealot(apkFile: apkFile, changeLog: changelog)
+        let isOK = uploadApkInZealot(apkFile: apkFile, changeLog: changelog)
+        guard isOK else {
+            SwiftShell.exit(errormessage: "上传失败!")
+        }
         print("上传APK完毕")
     }
     
@@ -100,7 +103,7 @@ struct BuildAndroid: ParsableCommand {
         return log
     }
     
-    func uploadApkInZealot(apkFile:String, changeLog:String) {
+    func uploadApkInZealot(apkFile:String, changeLog:String) -> Bool {
         guard let zealotToken = ProcessInfo.processInfo.environment["ZEALOT_TOKEN"] else {
             SwiftShell.exit(errormessage: "ZEALOT_TOKEN不存在")
         }
@@ -113,6 +116,8 @@ struct BuildAndroid: ParsableCommand {
         let semaphore = DispatchSemaphore(value: 0)
         let uploadUrl = "\(uploadHost)/api/apps/upload?token=\(zealotToken)"
         let mode = mode != .release ? "adhoc" : "release"
+        var isOK = false
+        AF.sessionConfiguration.timeoutIntervalForRequest = 5 * 60
         AF.upload(multipartFormData: { fromData in
             if let data = channelKey.data(using: .utf8) {
                 fromData.append(data, withName: "channel_key")
@@ -129,16 +134,15 @@ struct BuildAndroid: ParsableCommand {
         }, to: uploadUrl).uploadProgress(queue:DispatchQueue.global()) { progress in
             print("已上传:\(progress.completedUnitCount) 总共大小:\(progress.totalUnitCount)")
         }.response(queue: DispatchQueue.global()) { response in
-            if let error = response.error?.localizedDescription {
-                print(error)
-            } else if let response = response.response {
-                print(response)
+            if let code = response.response?.statusCode {
+                isOK = code == 201
             }
             semaphore.signal()
         }
         
 
         semaphore.wait()
+        return isOK
     }
 }
 
