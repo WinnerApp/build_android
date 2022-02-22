@@ -55,7 +55,12 @@ struct BuildAndroid: ParsableCommand {
         try FileManager.default.copyItem(atPath: apkFile, toPath: toApkFile)
         context.currentdirectory = "\(pwd)/android"
         print(context.currentdirectory)
-        let changelog = changelog()
+        let changelog:String
+        if let gitLog = ProcessInfo.processInfo.environment["GIT_LOG"] {
+            changelog = gitLog
+        } else {
+            changelog = self.changelog()
+        }
 //        let firCommand = context.runAsyncAndPrint("fastlane", "firim", "file:\(toApkFile)", "changelog:\(changelog)")
 //        try firCommand.finish()
         print("正在将APK上传到Zealot服务")
