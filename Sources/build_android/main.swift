@@ -125,7 +125,7 @@ struct BuildAndroid: ParsableCommand {
         let uploadUrl = "\(uploadHost)/api/apps/upload?token=\(zealotToken)"
         let mode = mode != .release ? "adhoc" : "release"
         var isOK = false
-        AF.sessionConfiguration.timeoutIntervalForRequest = 5 * 60
+        AF.sessionConfiguration.timeoutIntervalForRequest = 10 * 60
         AF.upload(multipartFormData: { fromData in
             if let data = channelKey.data(using: .utf8) {
                 fromData.append(data, withName: "channel_key")
@@ -142,7 +142,7 @@ struct BuildAndroid: ParsableCommand {
         }, to: uploadUrl).uploadProgress(queue:DispatchQueue.global()) { progress in
             print("已上传:\(progress.completedUnitCount) 总共大小:\(progress.totalUnitCount)")
         }.response(queue: DispatchQueue.global()) { response in
-            print(response.response?.headers ?? "")
+            print(response.debugDescription)
             if let code = response.response?.statusCode {
                 isOK = code == 201
             }
@@ -150,8 +150,8 @@ struct BuildAndroid: ParsableCommand {
         }
         
 
-        semaphore.wait()
-        return isOK
+        let result = semaphore.wait(timeout: .now() + AF.sessionConfiguration.timeoutIntervalForRequest)
+        return result == .success && isOK
     }
 }
 
