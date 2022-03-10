@@ -38,6 +38,7 @@ struct BuildAndroid: ParsableCommand {
         ]
         if let buildName = buildName {
             buildParameters.append(contentsOf: ["--build-name=\(buildName)"])
+            return
         }
         print(pwd)
         context.currentdirectory = pwd
@@ -65,7 +66,6 @@ struct BuildAndroid: ParsableCommand {
         }
         guard FileManager.default.fileExists(atPath: apkFile) else {
             throw "\(apkFile)不存在,请检查编译命令"
-            return
         }
         let apkCachePath = "\(home)/Library/Caches/apk"
         try createDirectoryIfNotExit(path: apkCachePath)
