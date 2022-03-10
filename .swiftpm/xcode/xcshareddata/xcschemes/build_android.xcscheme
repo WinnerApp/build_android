@@ -59,7 +59,8 @@
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       launchStyle = "0"
-      useCustomWorkingDirectory = "NO"
+      useCustomWorkingDirectory = "YES"
+      customWorkingDirectory = "/Users/king/.jenkins/workspace/win+_android"
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
       debugServiceExtension = "internal"
@@ -76,7 +77,7 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "--profile"
+            argument = "--profile --build-name 1.6.0"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>
@@ -87,8 +88,18 @@
             isEnabled = "YES">
          </EnvironmentVariable>
          <EnvironmentVariable
+            key = "APK_PATH"
+            value = "/Users/king/.jenkins/workspace/win+_android/build/app/outputs/flutter-apk/app-profile.apk"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "PWD"
+            value = "/Users/king/.jenkins/workspace/win+_android"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+         <EnvironmentVariable
             key = "ZEALOT_HOST"
-            value = "https://127.0.0.1"
+            value = "https://app.winnermedical.com"
             isEnabled = "YES">
          </EnvironmentVariable>
          <EnvironmentVariable
@@ -98,7 +109,7 @@
          </EnvironmentVariable>
          <EnvironmentVariable
             key = "ZEALOT_CHANNEL_KEY"
-            value = "f9a2cd8d790b511f5d1d03e8adb83be2"
+            value = "cbdf95be07f95a78c6495c4a2117607d"
             isEnabled = "YES">
          </EnvironmentVariable>
          <EnvironmentVariable

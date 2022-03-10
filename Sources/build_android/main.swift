@@ -28,9 +28,7 @@ struct BuildAndroid: ParsableCommand {
         guard let pwd = ProcessInfo.processInfo.environment["PWD"] else {
             throw "$PWD为空"
         }
-        guard let home = ProcessInfo.processInfo.environment["HOME"] else {
-            throw "$HOME为空"
-        }
+
         let buildNumber = "\(Int(Date().timeIntervalSince1970))"
         var buildParameters:[String] = [
             "build",
@@ -43,11 +41,31 @@ struct BuildAndroid: ParsableCommand {
         }
         print(pwd)
         context.currentdirectory = pwd
+        if let apkPath = ProcessInfo.processInfo.environment["APK_PATH"] {
+            try uploadApk(apkFile: apkPath,
+                          buildNumber: buildNumber,
+                          context: context,
+                          pwd: pwd)
+        }
         let command = context.runAsyncAndPrint("flutter", buildParameters)
         try command.finish()
-        let apkFile = "\(pwd)/build/app/outputs/flutter-apk/app-\(mode.rawValue).apk"
+        try uploadApk(apkFile: "\(pwd)/build/app/outputs/flutter-apk/app-\(mode.rawValue).apk",
+                      buildNumber: buildNumber,
+                      context: context,
+                      pwd: pwd)
+    }
+    
+    func uploadApk(apkFile:String,
+                   buildNumber:String,
+                   context:CustomContext,
+                   pwd:String) throws {
+        var context = context
+        guard let home = ProcessInfo.processInfo.environment["HOME"] else {
+            throw "$HOME为空"
+        }
         guard FileManager.default.fileExists(atPath: apkFile) else {
             throw "\(apkFile)不存在,请检查编译命令"
+            return
         }
         let apkCachePath = "\(home)/Library/Caches/apk"
         try createDirectoryIfNotExit(path: apkCachePath)
@@ -127,6 +145,11 @@ struct BuildAndroid: ParsableCommand {
         var isOK = false
         AF.sessionConfiguration.timeoutIntervalForRequest = 10 * 60
         AF.upload(multipartFormData: { fromData in
+            print("""
+            channel_key \(channelKey)
+            release_type \(mode)
+            changelog \(changeLog)
+            """)
             if let data = channelKey.data(using: .utf8) {
                 fromData.append(data, withName: "channel_key")
             }
@@ -140,7 +163,7 @@ struct BuildAndroid: ParsableCommand {
                 fromData.append(data, withName: "file", fileName: apkFile)
             }
         }, to: uploadUrl).uploadProgress(queue:DispatchQueue.global()) { progress in
-            print("已上传:\(progress.completedUnitCount) 总共大小:\(progress.totalUnitCount)")
+            print("\(progress.fractionCompleted * 100)% 已上传:\(progress.completedUnitCount) 总共大小:\(progress.totalUnitCount)")
         }.response(queue: DispatchQueue.global()) { response in
             print(response.debugDescription)
             if let code = response.response?.statusCode {
@@ -150,7 +173,7 @@ struct BuildAndroid: ParsableCommand {
         }
         
 
-        let result = semaphore.wait(timeout: .now() + AF.sessionConfiguration.timeoutIntervalForRequest)
+        let result = semaphore.wait(timeout: .now() + 15 * 60)
         return result == .success && isOK
     }
 }
