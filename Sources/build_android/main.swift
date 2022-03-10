@@ -56,7 +56,10 @@ struct BuildAndroid: ParsableCommand {
         context.currentdirectory = "\(pwd)/android"
         print(context.currentdirectory)
         let changelog:String
-        if let gitLog = ProcessInfo.processInfo.environment["GIT_LOG"] {
+        if let data = FileManager.default.contents(atPath: "\(pwd)/git.log"),
+           let log = String(data: data, encoding: .utf8) {
+            changelog = log
+        } else if let gitLog = ProcessInfo.processInfo.environment["GIT_LOG"] {
             changelog = gitLog
         } else {
             changelog = self.changelog()
@@ -139,6 +142,7 @@ struct BuildAndroid: ParsableCommand {
         }, to: uploadUrl).uploadProgress(queue:DispatchQueue.global()) { progress in
             print("已上传:\(progress.completedUnitCount) 总共大小:\(progress.totalUnitCount)")
         }.response(queue: DispatchQueue.global()) { response in
+            print(response.response?.headers ?? "")
             if let code = response.response?.statusCode {
                 isOK = code == 201
             }
