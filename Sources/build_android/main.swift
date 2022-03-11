@@ -38,7 +38,6 @@ struct BuildAndroid: ParsableCommand {
         ]
         if let buildName = buildName {
             buildParameters.append(contentsOf: ["--build-name=\(buildName)"])
-            return
         }
         print(pwd)
         context.currentdirectory = pwd
