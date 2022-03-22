@@ -142,8 +142,11 @@ struct BuildAndroid: ParsableCommand {
         let uploadUrl = "\(uploadHost)/api/apps/upload?token=\(zealotToken)"
         let mode = mode != .release ? "adhoc" : "release"
         var isOK = false
-        AF.sessionConfiguration.timeoutIntervalForRequest = 10 * 60
-        AF.upload(multipartFormData: { fromData in
+        let domain = uploadHost.replacingOccurrences(of: "https://", with: "")
+        let trustManager = ServerTrustManager(evaluators: [domain:DisabledTrustEvaluator()])
+        let session = Session(serverTrustManager:trustManager)
+        session.sessionConfiguration.timeoutIntervalForRequest = 10 * 60
+        session.upload(multipartFormData: { fromData in
             print("""
             channel_key \(channelKey)
             release_type \(mode)
@@ -161,9 +164,9 @@ struct BuildAndroid: ParsableCommand {
             if let data = try? Data(contentsOf: URL(fileURLWithPath: apkFile)) {
                 fromData.append(data, withName: "file", fileName: apkFile)
             }
-        }, to: uploadUrl).uploadProgress(queue:DispatchQueue.global()) { progress in
+        }, to: uploadUrl).uploadProgress(queue:DispatchQueue.global(qos: .background)) { progress in
             print("\(progress.fractionCompleted * 100)% 已上传:\(progress.completedUnitCount) 总共大小:\(progress.totalUnitCount)")
-        }.response(queue: DispatchQueue.global()) { response in
+        }.response(queue: DispatchQueue.global(qos: .background)) { response in
             print(response.debugDescription)
             if let code = response.response?.statusCode {
                 isOK = code == 201
