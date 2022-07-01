@@ -28,6 +28,10 @@ struct BuildAndroid: ParsableCommand {
         guard let pwd = ProcessInfo.processInfo.environment["PWD"] else {
             throw "$PWD为空"
         }
+        
+        guard let channelKey = ProcessInfo.processInfo.environment["ZEALOT_CHANNEL_KEY"] else {
+            throw "$ZEALOT_CHANNEL_KEY 不存在"
+        }
 
         let buildNumber = "\(Int(Date().timeIntervalSince1970))"
         var buildParameters:[String] = [
@@ -35,6 +39,7 @@ struct BuildAndroid: ParsableCommand {
             "apk",
             "--\(mode.rawValue)",
             "--build-number=\(buildNumber)",
+            "--dart-define=ZEALOT_CHANNEL_KEY=\(channelKey)"
         ]
         if let buildName = buildName {
             buildParameters.append(contentsOf: ["--build-name=\(buildName)"])
