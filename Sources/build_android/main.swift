@@ -18,6 +18,10 @@ struct BuildAndroid: ParsableCommand {
     @Option(help:"设置主要的版本号 比如 1.0.0")
     var buildName:String?
     
+    @Flag(help: "是否关闭R8 混淆, 默认开启")
+    var enableShrink = true
+    
+    
     mutating func run() throws {
 //        uploadApkInZealot(apkFile: "/Users/king/Library/Caches/apk/app-profile-1644727552.apk", changeLog: "")
 //        return
@@ -41,6 +45,9 @@ struct BuildAndroid: ParsableCommand {
             "--build-number=\(buildNumber)",
             "--dart-define=ZEALOT_CHANNEL_KEY=\(channelKey)"
         ]
+        if !enableShrink {
+            buildParameters.append("--no-shrink")
+        }
         if let buildName = buildName {
             buildParameters.append(contentsOf: ["--build-name=\(buildName)"])
         }
