@@ -59,7 +59,11 @@ struct BuildAndroid: ParsableCommand {
                           context: context,
                           pwd: pwd)
         }
-        let command = context.runAsyncAndPrint("flutter", buildParameters)
+        let isFvm = FileManager.default.fileExists(atPath: pwd + "/.dart_tool/version")
+        if (isFvm) {
+            buildParameters.insert("flutter", at: 0)
+        }
+        let command = context.runAsyncAndPrint(isFvm ? "fvm" : "flutter", buildParameters)
         try command.finish()
         try uploadApk(apkFile: "\(pwd)/build/app/outputs/flutter-apk/app-\(mode.rawValue).apk",
                       buildNumber: buildNumber,
