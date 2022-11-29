@@ -64,6 +64,7 @@ struct BuildAndroid: ParsableCommand {
         if (isFvm) {
             buildParameters.insert("flutter", at: 0)
         }
+        print("\(isFvm ? "fvm" : "flutter") \(buildParameters.joined(separator:" "))")
         let command = context.runAsyncAndPrint(isFvm ? "fvm" : "flutter", buildParameters)
         try command.finish()
         try uploadApk(apkFile: "\(pwd)/build/app/outputs/flutter-apk/app-\(mode.rawValue).apk",
