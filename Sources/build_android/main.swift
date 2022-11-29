@@ -43,7 +43,8 @@ struct BuildAndroid: ParsableCommand {
             "apk",
             "--\(mode.rawValue)",
             "--build-number=\(buildNumber)",
-            "--dart-define=ZEALOT_CHANNEL_KEY=\(channelKey)"
+            "--dart-define=ZEALOT_CHANNEL_KEY=\(channelKey)",
+            "--multidex"
         ]
         if !enableShrink {
             buildParameters.append("--no-shrink")
