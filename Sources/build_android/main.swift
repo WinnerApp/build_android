@@ -24,6 +24,9 @@ struct BuildAndroid: ParsableCommand {
     @Option(help: "请输入自定义 Apk 路径")
     var apkPath:String?
     
+    @Option(help: "请输入自定义 build number")
+    var buildNumber:String?
+    
     
     mutating func run() throws {
 //        uploadApkInZealot(apkFile: "/Users/king/Library/Caches/apk/app-profile-1644727552.apk", changeLog: "")
@@ -40,7 +43,7 @@ struct BuildAndroid: ParsableCommand {
             throw "$ZEALOT_CHANNEL_KEY 不存在"
         }
 
-        let buildNumber = "\(Int(Date().timeIntervalSince1970))"
+        let _buildNumber = buildNumber ?? "\(Int(Date().timeIntervalSince1970))"
         
         var _apkPath:String = ""
         if let apkPath {
@@ -51,7 +54,7 @@ struct BuildAndroid: ParsableCommand {
                 "build",
                 "apk",
                 "--\(mode.rawValue)",
-                "--build-number=\(buildNumber)",
+                "--build-number=\(_buildNumber)",
                 "--dart-define=ZEALOT_CHANNEL_KEY=\(channelKey)",
                 "--multidex"
             ]
@@ -65,7 +68,7 @@ struct BuildAndroid: ParsableCommand {
             context.currentdirectory = pwd
             if let apkPath = ProcessInfo.processInfo.environment["APK_PATH"] {
                 try uploadApk(apkFile: apkPath,
-                              buildNumber: buildNumber,
+                              buildNumber: _buildNumber,
                               context: context,
                               pwd: pwd)
             }
@@ -79,7 +82,7 @@ struct BuildAndroid: ParsableCommand {
             _apkPath = "\(pwd)/build/app/outputs/flutter-apk/app-\(mode.rawValue).apk"
         }
         try uploadApk(apkFile: _apkPath,
-                      buildNumber: buildNumber,
+                      buildNumber: _buildNumber,
                       context: context,
                       pwd: pwd)
     }
