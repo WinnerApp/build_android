@@ -21,6 +21,9 @@ struct BuildAndroid: ParsableCommand {
     @Flag(help: "是否关闭R8 混淆, 默认开启")
     var enableShrink = true
     
+    @Option(help: "请输入自定义 Apk 路径")
+    var apkPath:String?
+    
     
     mutating func run() throws {
 //        uploadApkInZealot(apkFile: "/Users/king/Library/Caches/apk/app-profile-1644727552.apk", changeLog: "")
@@ -38,36 +41,44 @@ struct BuildAndroid: ParsableCommand {
         }
 
         let buildNumber = "\(Int(Date().timeIntervalSince1970))"
-        var buildParameters:[String] = [
-            "build",
-            "apk",
-            "--\(mode.rawValue)",
-            "--build-number=\(buildNumber)",
-            "--dart-define=ZEALOT_CHANNEL_KEY=\(channelKey)",
-            "--multidex"
-        ]
-        if !enableShrink {
-            buildParameters.append("--no-shrink")
+        
+        var _apkPath:String = ""
+        if let apkPath {
+            _apkPath = apkPath
+        } else {
+            
+            var buildParameters:[String] = [
+                "build",
+                "apk",
+                "--\(mode.rawValue)",
+                "--build-number=\(buildNumber)",
+                "--dart-define=ZEALOT_CHANNEL_KEY=\(channelKey)",
+                "--multidex"
+            ]
+            if !enableShrink {
+                buildParameters.append("--no-shrink")
+            }
+            if let buildName = buildName {
+                buildParameters.append(contentsOf: ["--build-name=\(buildName)"])
+            }
+            print(pwd)
+            context.currentdirectory = pwd
+            if let apkPath = ProcessInfo.processInfo.environment["APK_PATH"] {
+                try uploadApk(apkFile: apkPath,
+                              buildNumber: buildNumber,
+                              context: context,
+                              pwd: pwd)
+            }
+            let isFvm = FileManager.default.fileExists(atPath: pwd + "/.dart_tool/version")
+            if (isFvm) {
+                buildParameters.insert("flutter", at: 0)
+            }
+            print("\(isFvm ? "fvm" : "flutter") \(buildParameters.joined(separator:" "))")
+            let command = context.runAsyncAndPrint(isFvm ? "fvm" : "flutter", buildParameters)
+            try command.finish()
+            _apkPath = "\(pwd)/build/app/outputs/flutter-apk/app-\(mode.rawValue).apk"
         }
-        if let buildName = buildName {
-            buildParameters.append(contentsOf: ["--build-name=\(buildName)"])
-        }
-        print(pwd)
-        context.currentdirectory = pwd
-        if let apkPath = ProcessInfo.processInfo.environment["APK_PATH"] {
-            try uploadApk(apkFile: apkPath,
-                          buildNumber: buildNumber,
-                          context: context,
-                          pwd: pwd)
-        }
-        let isFvm = FileManager.default.fileExists(atPath: pwd + "/.dart_tool/version")
-        if (isFvm) {
-            buildParameters.insert("flutter", at: 0)
-        }
-        print("\(isFvm ? "fvm" : "flutter") \(buildParameters.joined(separator:" "))")
-        let command = context.runAsyncAndPrint(isFvm ? "fvm" : "flutter", buildParameters)
-        try command.finish()
-        try uploadApk(apkFile: "\(pwd)/build/app/outputs/flutter-apk/app-\(mode.rawValue).apk",
+        try uploadApk(apkFile: _apkPath,
                       buildNumber: buildNumber,
                       context: context,
                       pwd: pwd)
