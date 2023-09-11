@@ -177,7 +177,7 @@ struct BuildAndroid: ParsableCommand {
         let domain = uploadHost.replacingOccurrences(of: "https://", with: "")
         let trustManager = ServerTrustManager(evaluators: [domain:DisabledTrustEvaluator()])
         let session = Session(serverTrustManager:trustManager)
-        session.sessionConfiguration.timeoutIntervalForRequest = 10 * 60
+        session.sessionConfiguration.timeoutIntervalForRequest = 30 * 60
         session.upload(multipartFormData: { fromData in
             print("""
             channel_key \(channelKey)
@@ -207,7 +207,7 @@ struct BuildAndroid: ParsableCommand {
         }
         
 
-        let result = semaphore.wait(timeout: .now() + 15 * 60)
+        let result = semaphore.wait(timeout: .now() + 60 * 60)
         return result == .success && isOK
     }
 }
